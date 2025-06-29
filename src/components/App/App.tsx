@@ -1,46 +1,55 @@
-import Books from '../Books/Books';
-import ClickCounter from '../ClickCounter/ClickCounter';
-import Objects from '../Objects/Objects';
-import SomeStans from '../SomeStans/SomeStans';
-import UserMenu from '../User/User';
-import Mailbox from '../message/Message';
-import Product from '../Product/Product';
+import CafeInfo from '../CafeInfo/CafeInfo';
+import VoteOptions from '../VoteOptions/VoteOptions';
+import css from './App.module.css';
 import { useState } from 'react';
+import type { Votes, VoteType } from '../../types/votes';
+import VoteStats from '../VoteStats/VoteStats';
+import Notification from '../Notification/Notification';
 
 export default function App() {
-  const [clicks, setClicks] = useState(0);
+  const [votes, setVotes] = useState<Votes>({
+    good: 0,
+    neutral: 0,
+    bad: 0,
+  });
 
-  const handleClick = () => {
-    setClicks(clicks + 1);
+  const handleVote = (type: VoteType) => {
+    setVotes(prev => ({
+      ...prev,
+      [type]: prev[type] + 1,
+    }));
   };
 
+  const resetVotes = () => {
+    setVotes({
+      good: 0,
+      neutral: 0,
+      bad: 0,
+    });
+  };
+
+  const totalVotes = votes.good + votes.neutral + votes.bad;
+  const positiveRate = totalVotes
+    ? Math.round((votes.good / totalVotes) * 100)
+    : 0;
+
   return (
-    <>
-      <h1>Best selling</h1>
-      <Product
-        name="Tacos With Lime"
-        imgUrl="https://images.pexels.com/photos/461198/pexels-photo-461198.jpeg?w=640"
-        price={10.99}
+    <div className={css.app}>
+      <CafeInfo />
+      <VoteOptions
+        onVote={handleVote}
+        onReset={resetVotes}
+        canReset={totalVotes > 0}
       />
-      <Product
-        name="Fries and Burger"
-        imgUrl="https://images.pexels.com/photos/70497/pexels-photo-70497.jpeg?w=640"
-        price={14.29}
-      />
-      <hr />
-      <ClickCounter value={clicks} onUpdate={handleClick} />
-      <ClickCounter value={clicks} onUpdate={handleClick} />
-      <hr />
-      <SomeStans />
-      <hr />
-      <Objects />
-      <hr />
-      <Mailbox username="Poly" unreadMessages={['hello']} />
-      <Mailbox username="Julie" unreadMessages={[]} />
-      <hr />
-      <Books />
-      <hr />
-      <UserMenu name="Poly" />
-    </>
+      {totalVotes > 0 ? (
+        <VoteStats
+          votes={votes}
+          totalVotes={totalVotes}
+          positiveRate={positiveRate}
+        />
+      ) : (
+        <Notification />
+      )}
+    </div>
   );
 }
